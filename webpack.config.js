@@ -80,7 +80,7 @@ module.exports = {
         // 多入口的html文件用chunks这个参数来区分
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname,'src','lemon','index.html'),
-            filename:'../indexLemon.html',
+            filename: path.resolve(__dirname,'dist','indexLemon.html'),
             chunks:['lemon'],
             hash:true,//防止缓存
             minify:{
@@ -89,7 +89,7 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname,'src','yeyu','index.html'),
-            filename:'../indexYeyu.html',
+            filename: path.resolve(__dirname,'dist','indexYeyu.html'),
             chunks:['yeyu'],
             hash:true,//防止缓存
             minify:{
@@ -98,6 +98,7 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             template: path.resolve(__dirname,'src','firia','index.html'),
+            filename: path.resolve(__dirname,'dist','indexFiria.html'),
             filename:'../indexFiria.html',
             chunks:['firia'],
             hash:true,//防止缓存
