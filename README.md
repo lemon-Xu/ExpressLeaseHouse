@@ -12,6 +12,16 @@ npm script：
 表名: Table  
 字段名: Table_FieldName
 ### 2.2字段详细设计
+
+### 2.3.2House
+|字段 |注释 | 类型 |主键 |外键 |备注 |
+|House_ID |房源ID | int |是 | |自增 |
+|House_LandLordID |房东ID | int | | |not null |
+|House_Area |房屋面积 | int | | |not null |
+|House_Profile |房屋简介 | varchar(200) | | |not null, 限制140字，为空则自动生成 |
+|House_Address |房屋地址 | varchar(40) | | |not null 以-为分隔符 |
+|House_Headline |房屋标题 | varchar(20) | | |not null |
+
 #### 2.3.3HouseLease
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
@@ -38,6 +48,7 @@ npm script：
 |HouseLeaseOrderForm_Mode| 租赁方式| string(10)(year or month) | | |not Null
 |HouseLeaseOrderForm_ElectronicContract | 电子合同 | varchar(255)(UUID) | | | not Null
 |HouseLeaseOrderForm_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
+
 
 ## 3.后台API接口
 ### 3.1接口规范
