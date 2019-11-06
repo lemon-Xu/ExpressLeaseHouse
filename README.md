@@ -2,6 +2,7 @@
 # 1.ExpressLeaseHouse
 大三上,完成工程实践，开发一个房屋租聘系统。
 环境：node、Express、antd、Webpack4、mysql
+
 npm script：
 * "start": "supervisor index" 启动项目工程热更新
 * "build": "webpack"  webpack4  打包
@@ -15,6 +16,7 @@ npm script：
 
 ### 2.3.2House
 |字段 |注释 | 类型 |主键 |外键 |备注 |
+--|--|--|--|--|--|
 |House_ID |房源ID | int |是 | |自增 |
 |House_LandLordID |房东ID | int | | |not null |
 |House_Area |房屋面积 | int | | |not null |
