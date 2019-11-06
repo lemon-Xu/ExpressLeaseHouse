@@ -11,7 +11,13 @@
 ####  2.3.3HouseLease
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
-|HouseLease_LeaseID | 房屋租赁ID |int | 是 | 否 |自增
+|HouseLease_LeaseID | 房屋租赁ID |int | 是 |   |自增
+|HouseLease_HouseID | 房屋ID     |int |   | 是 |
+|HouseLease_LeaseMoney | 租金金额 | int | | | not Null
+|HosueLease_ContactInf | 手机号码 | varchar(20) | | | not Null
+|HouseLease_OpenTime | 公开时间 | data | | | not Null
+|HouseLease_Mode| 租赁方式| string(year or month) | | |not Null
+|HouseLease_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
 ## 3.后台API接口
 ### 3.1接口规范
 采用RETSful API设计规范
