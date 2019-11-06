@@ -22,7 +22,7 @@ npm script：
 |LandLor_ID |房东ID | int |是 | |自增 |
 |LandLor_UserID |用户ID | int | |是 |not null |
 |LandLor_ContacInf |房东联系方式 | varchar(20) | | |not null |
-|LandLor_Profile |房源简介 | varchar(200)| | |not null，限制140字，为空则自动生成  |
+|LandLor_Profile |房源简介 | varchar(300)| | |not null，限制140字，为空则自动生成  |
 
 ####  2.3.3管理员
 
@@ -34,9 +34,9 @@ npm script：
 |House_ID |房源ID | int |是 | |自增 |
 |House_LandLordID |房东ID | int | |是 | |
 |House_Area |房屋面积 | int | | |not null |
-|House_Profile |房屋简介 | varchar(200) | | |not null, 限制140字，为空则自动生成 |
+|House_Profile |房屋简介 | varchar(300) | | |not null, 限制140字，为空则自动生成 |
 |House_Address |房屋地址 | varchar(40) | | |not null 以-为分隔符 |
-|House_Headline |房屋标题 | varchar(20) | | |not null |
+|House_Headline |房屋标题 | varchar(40) | | |not null |
 
 ####  2.3.6HouseLease
 |字段 |注释 | 类型 |主键 |外键 |备注 |
