@@ -18,7 +18,7 @@
 |HosueLease_ContactInf | 手机号码 | varchar(20) | | | not Null
 |HouseLease_OpenTime | 公开时间 | data | | | not Null
 |HouseLease_Mode| 租赁方式| varchar(10)(year or month) | | |not Null
-|HouseLease_ElectronicContractTemplate| 电子合同模板 |varchar(255)(UUID)| not null
+|HouseLease_ElectronicContractTemplate| 电子合同模板 |varchar(255)(UUID)| | | not null
 |HouseLease_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
 
 #### 2.3.4HouseLeaseOrderForm
