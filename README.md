@@ -8,7 +8,9 @@
 表名: Table  
 字段名: Table_fieldName
 ### 2.2字段详细设计
-
+####  2.3.3HouseLease
+|字段 |注释 | 类型 |主键 |外键 |备注 |
+|HouseLease_LeaseID | 房屋租赁ID |int | 是 | 否 |自增
 ## 3.后台API接口
 ### 3.1接口规范
 采用RETSful API设计规范
