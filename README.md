@@ -14,12 +14,13 @@
 |HouseLease_LeaseID | 房屋租赁ID |int | 是 |   |自增
 |HouseLease_HouseID | 房屋ID     |int |   | 是 |
 |HouseLease_LeaseMoney | 租金金额 | int | | | not Null
+|HouseLease_CashDeposit| 定金| int | | | not null
 |HosueLease_ContactInf | 手机号码 | varchar(20) | | | not Null
 |HouseLease_OpenTime | 公开时间 | data | | | not Null
 |HouseLease_Mode| 租赁方式| varchar(10)(year or month) | | |not Null
-|HouseLease_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
-|HouseLease_CashDeposit| 定金| int | | | not null
 |HouseLease_ElectronicContractTemplate| 电子合同模板 |varchar(255)(UUID)| not null
+|HouseLease_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
+
 #### 2.3.4HouseLeaseOrderForm
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
@@ -31,8 +32,9 @@
 |HouseLeaseOrderForm_StartTime| 开始时间| data | | | not Null
 |HouseLeaseOrderForm_EndTime | 结束时间 | data | | | not Null
 |HouseLeaseOrderForm_Mode| 租赁方式| string(10)(year or month) | | |not Null
-|HouseLeaseOrderForm_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
 |HouseLeaseOrderForm_ElectronicContract | 电子合同 | varchar(255)(UUID) | | | not Null
+|HouseLeaseOrderForm_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
+
 ## 3.后台API接口
 ### 3.1接口规范
 采用RETSful API设计规范
