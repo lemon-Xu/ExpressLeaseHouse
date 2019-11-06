@@ -1,4 +1,4 @@
-[ TOC ]
+[toc]
 # 1.ExpressLeaseHouse
 大三上,完成工程实践，开发一个房屋租聘系统。
 环境：node、Express、antd、Webpack4、mysql
