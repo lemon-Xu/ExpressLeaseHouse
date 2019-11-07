@@ -31,11 +31,18 @@ User_IsBan|	被屏蔽|	Int(2) (1 or 0 )|	||		not null， 1被屏蔽
 |LandLor_Profile |房东简介 | varchar(300)| | |not null，限制140字，为空则自动生成  |
 |LandLor_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
 
-####  2.3.3管理员
+####  2.3.3Administrator
+|字段 |注释 | 类型 |主键 |外键 |备注 |
+--|--|--|--|--|--|
+Administrator_Id|	管理员ID|	Int|	主键|		|自增
 
-
-####  2.3.4租客
-
+####  2.3.4Tenant
+|字段 |注释 | 类型 |主键 |外键 |备注 |
+--|--|--|--|--|--|
+Tenant_Id|	租客id|	int|	主键|	|	自增
+Tenant_ Profile|	租客简介|	varchar(200)|	|	| 	Not null，为空自动设置
+Tenant_Name|租客昵称	|	Varchar(20)|	|	|	 not null
+Tenant_ ContactInformation|	联系方式|	varchar(20)| | |	 		not null
 
 ####  2.3.5House
 |字段 |注释 | 类型 |主键 |外键 |备注 |
