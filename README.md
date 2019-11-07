@@ -28,12 +28,14 @@ User_IsBan|	被屏蔽|	Int(2) (1 or 0 )|	||		not null， 1被屏蔽
 |LandLor_ID |房东ID | int |是 | |自增 |
 |LandLor_UserID |用户ID | int | |是 |not null |
 |LandLor_ContacInf |房东联系方式 | varchar(20) | | |not null |
-|LandLor_Profile |房源简介 | varchar(300)| | |not null，限制140字，为空则自动生成  |
+|LandLor_Profile |房东简介 | varchar(300)| | |not null，限制140字，为空则自动生成  |
 |LandLor_IsBan| 被屏蔽| int(2)(1 or 0) | | | not Null 1被屏蔽
 
 ####  2.3.3管理员
 
+
 ####  2.3.4租客
+
 
 ####  2.3.5House
 |字段 |注释 | 类型 |主键 |外键 |备注 |
