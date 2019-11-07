@@ -15,7 +15,13 @@ npm script：
 ### 2.2字段详细设计
 
 ####  2.3.1User
-
+|字段 |注释 | 类型 |主键 |外键 |备注 |
+--|--|--|--|--|--|
+User_ID|	用户ID|	int|	主键|	|	自增
+User_Name|	用户昵称|	Varchar(20)|	|	| 	Not null，为空自动字符串设置
+User_PassWord|	用户密码|	Varchar(20)|	|	|	MD5加密非空
+User_Rank|	用户身份|	Varchar(20)|	||		not null，默认’游客’
+User_IsBan|	被屏蔽|	Int(2) (1 or 0 )|	||		not null， 1被屏蔽
 ####  2.3.2LandLord
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
