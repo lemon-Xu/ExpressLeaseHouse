@@ -36,11 +36,13 @@ User_IsBan|	被屏蔽|	Int(2) (1 or 0 )|	||		not null， 1被屏蔽
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
 Administrator_Id|	管理员ID|	Int|	主键|		|自增
+|LandLor_UserID |用户ID | int | |是 |not null |
 
 ####  2.3.4Tenant
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
 Tenant_Id|	租客id|	int|	主键|	|	自增
+Tenantr_UserID |用户ID | int | |是 |not null |
 Tenant_ Profile|	租客简介|	varchar(200)|	|	| 	Not null，为空自动设置
 Tenant_Name|租客昵称	|	Varchar(20)|	|	|	 not null
 Tenant_ ContactInformation|	联系方式|	varchar(20)| | |	 		not null
@@ -60,7 +62,7 @@ Tenant_ ContactInformation|	联系方式|	varchar(20)| | |	 		not null
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
 |HouseLease_LeaseID | 房屋租赁ID |int | 是 |   |自增
-|HouseLease_HouseID | 房屋ID     |int |   | 是 |
+|HouseLease_HouseID | 房源ID     |int |   | 是 |
 |HouseLease_LeaseMoney | 租金金额 | int | | | not Null
 |HouseLease_CashDeposit| 定金| int | | | not null
 |HosueLease_ContactInf | 手机号码 | varchar(20) | | | not Null
