@@ -36,7 +36,7 @@ User_IsBan|	被屏蔽|	Int(2) (1 or 0 )|	||		not null， 1被屏蔽
 |字段 |注释 | 类型 |主键 |外键 |备注 |
 --|--|--|--|--|--|
 Administrator_Id|	管理员ID|	Int|	主键|		|自增
-|LandLor_UserID |用户ID | int | |是 |not null |
+|Administrator_UserID |用户ID | int | |是 |not null |
 
 ####  2.3.4Tenant
 |字段 |注释 | 类型 |主键 |外键 |备注 |
