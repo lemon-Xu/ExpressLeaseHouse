@@ -1,0 +1,12 @@
+{
+    "id": "HouseLease",
+    "driver": "mysql2",
+    "host": "localhost",
+    "user": "root",
+    "password": "1234",
+    "database": "houselease",
+    "charset": "utf8",
+    "waitForConnections": true,
+    "connectionLimit": 10,
+    "queueLimit": 0
+}

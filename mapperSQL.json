@@ -1,0 +1,17 @@
+{
+   "selectUsers":{
+       "type":"select",
+       "sql":" SELECT * FROM Users WHERE Users_Rank = '管理员' ",
+       "if":[
+           {
+               "logic": "Users_IsBan != null AND( Users_IsBan == 1 or Users_IsBan == 2)",
+               "sql": "AND Users_IsBan = #{Users_IsBan}"
+           }
+       ],
+       "when":[],
+       "otherwise":[],
+       "where": [],
+       "set": [],
+       "foreach": []  
+   }
+}
