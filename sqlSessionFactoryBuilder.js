@@ -232,7 +232,7 @@ class Lexer{
         this.singleOperatorOrDelimiter = new Array('!', '(', ')') //单字符界位运算符表  3 - 5
         this.doubleOperatorOrDelimiter = new Array('==', '!=', '&&', '||') //双字符界位运算符表 6 - 9
         this.firstOperatorOrDelimiter = new Array('!', '(', ')', '=', '&', '|') // 界符运算符首字符表
-        this.IDentifierTb1 = new Array() // 标识符表   100
+        this.IDentifierTb = new Array() // 标识符表   100
         this.ip = -1 // 扫描指针
         this.tokenArray = new Array()
         this.project = project // 要扫描的文本
@@ -241,7 +241,7 @@ class Lexer{
     searchReserve(word){ // 查找保留字
         for(var a in this.reserveWord) {
             if(word == this.reserveWord[a])
-                return a + 1
+                return parseInt(a)
         }
         return -1
     }
@@ -303,8 +303,10 @@ class Lexer{
             }
             var syn = this.searchReserve(receiver)
             if(syn == -1){  // 是标识符
+                var token = new Token(receiver, 100)
                 this.tokenArray.push()
-                this.tokenArray.push(new Token(receiver, 100))
+                this.tokenArray.push(token)
+                this.IDentifierTb.push(token)
                 return 
             }
             this.tokenArray.push(new Token(receiver, syn)) // 关键字
@@ -339,6 +341,10 @@ class Lexer{
     getTokenArray(){
         return this.tokenArray
     }
+
+    IDentifierTbToString(){
+        return this.IDentifierTb
+    }
 }
 
 var sqlSession = new SqlSessionFactoryBuilder()
@@ -360,3 +366,5 @@ var lexer = new Lexer(project)
 lexer.scannerProject()
 console.log(project)
 console.log(lexer.getTokenArray())
+console.log('IDentifierTb: ')
+console.log(lexer.IDentifierTbToString())
