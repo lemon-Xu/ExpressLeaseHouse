@@ -223,6 +223,12 @@ class Token{
     toString(){
         return '<'+ this.string +',' + this.num + '>'
     }
+    getString(){
+        return this.string
+    }
+    getNum(){
+        return this.num
+    }
 }
 
 class Lexer{
@@ -347,6 +353,111 @@ class Lexer{
     }
 }
 
+class SyntacticAnalyzer{
+    constructor(tokenArray){
+        this.COUNT = 99
+        this.ID = 100
+        this.ip = -1 // 扫描指针
+        this.tokenArray = tokenArray // token序列
+        this.stack = new Array('$','E')
+        this.outPut = new Array()
+        this.predictiveAnTb = new Map()
+        this.terminalSymbol = new Array('E', 'B', 'T', 'I', 'C', 'O')
+
+        this.predictiveAnTb.set('E,!', 'E->TB')
+        this.predictiveAnTb.set('E,null', 'E->TB')
+        this.predictiveAnTb.set('E,ID', 'E->TB')
+        this.predictiveAnTb.set('E,COUNT', 'E->TB')
+        this.predictiveAnTb.set('E,(', 'E->TB')
+
+        this.predictiveAnTb.set('B,&&', 'EB->OT')
+        this.predictiveAnTb.set('B,||', 'EB->OT')
+        this.predictiveAnTb.set('B,ε,', 'EB->ε')
+
+        this.predictiveAnTb.set('T,!', 'T->!T')
+        this.predictiveAnTb.set('T,null', 'T->ICI')
+        this.predictiveAnTb.set('T,ID', 'T->ICI')
+        this.predictiveAnTb.set('T,COUNT', 'T->ICI')
+
+        this.predictiveAnTb.set('I,null', new Array('I','-','>','null'))
+        this.predictiveAnTb.set('I,ID', new Array('I', '-', '>', 'ID'))
+        this.predictiveAnTb.set('I,COUNT', new Array('I', '-', '>', 'COUNT'))
+
+        this.predictiveAnTb.set('C,==', new Array('C', '-', '>', '=='))
+        this.predictiveAnTb.set('C,!=', new Array('C', '-', '>', '!='))
+
+        this.predictiveAnTb.set('O,&&', new Array('O', '-', '>', '&&'))
+        this.predictiveAnTb.set('O,||', new Array('O', '-', '>', '||'))
+    }
+
+    selectTb(a, b){
+        return this.predictiveAnTb.get(a+','+b)
+    }
+
+    scanner(){
+        var x = this.stack[this.stack.length - 1] // 栈顶符号
+        var ch = this.tokenArray[++this.ip]
+        while(x != '$'){ // 栈非空
+            ch = this.tokenArray[this.ip]
+            if(ch == undefined)
+                throw '指针越界'
+            if(ch.getNum() == this.COUNT)
+                ch = new Token('COUNT', this.COUNT)
+            else if(ch.getNum() == this.ID)
+                ch = new Token('ID', this.ID)
+            var selectValue = this.selectTb(x, ch.getString())
+            var b = (x + ',' + ch.getString())
+            if(x == ch.getString()){ // X等于ip所指的符号ch,执行栈的弹出操作
+                this.stack.pop()
+                this.ip++ // 指针下移
+            }
+            else if(this.terminalSymbol.indexOf(x) == -1){ // x不在非终结符表中
+                console.log(this.stack)
+                throw 'error, 语法错误: \'' + x + '\' 不在非终结符表中'
+            }
+            else if(selectValue == undefined){
+                //console.log(this.predictiveAnTb)
+                console.log(this.stack)
+                throw 'error, 语法错误: '  + b + ' 是一个报错条目'
+            }
+            else { // 输出产生式， 弹出栈顶符号
+                // console.log(b +':  ' + selectValue)
+                this.stack.pop()
+                
+                for(var a = selectValue.length - 1; a >= 0; a--){
+                    if(selectValue[a] == '>')
+                        break;
+                    this.stack.push(selectValue[a])
+                }
+
+                var log = ''
+                for(var b in selectValue){
+                    if(selectValue[b] != ',')
+                        log += selectValue[b]
+                }
+                console.log(log)
+            }
+            x = this.stack[this.stack.length - 1]
+        }
+    }
+
+    tbToString(){
+        return this.predictiveAnTb
+    }
+    
+    equalToken(string, token){
+        console.log(string, token.getString())
+        if(string == token.getString())
+            return true
+        else if(string == 'COUNT' && token.getNum() == this.COUNT)
+            return true
+        else if(string == 'ID' && token.getNum() == this.ID)
+            return true
+        else
+            return false
+    }
+}
+
 var sqlSession = new SqlSessionFactoryBuilder()
 sqlSession.getResource();
 sqlSession.build();
@@ -361,10 +472,22 @@ mapperSQL.getRetSQL("selectUsers",1)
 console.log("**********")
 
 var project = 'user_Name == null && user_ID != 2'
+var project2 = 'Users_123_Name == users_name || users_password != users_Name'
 
-var lexer = new Lexer(project)
+
+var lexer = new Lexer(project2)
 lexer.scannerProject()
 console.log(project)
 console.log(lexer.getTokenArray())
 console.log('IDentifierTb: ')
 console.log(lexer.IDentifierTbToString())
+
+console.log('\n\n\n\n')
+var syntacticAnalyzer = new SyntacticAnalyzer(lexer.getTokenArray())
+console.log(lexer.getTokenArray)
+console.log(syntacticAnalyzer)
+console.log('\n\n\n\n')
+syntacticAnalyzer.scanner()
+// console.log(syntacticAnalyzer.tbToString())
+// console.log(syntacticAnalyzer.selectTb('E','!'))
+// console.log(syntacticAnalyzer.selectTb('E','!='))
