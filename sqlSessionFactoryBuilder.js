@@ -234,10 +234,10 @@ class Token{
 class Lexer{
     constructor(project){
         this.reserveWord = new Array('null', 'true', 'false') // 保留字表 0-2
-        this.operatorOrDelimiter = new Array('!', '(', ')', '==', '!=', '&&', '||') // 界符运算符表 3 - 9
-        this.singleOperatorOrDelimiter = new Array('!', '(', ')') //单字符界位运算符表  3 - 5
-        this.doubleOperatorOrDelimiter = new Array('==', '!=', '&&', '||') //双字符界位运算符表 6 - 9
-        this.firstOperatorOrDelimiter = new Array('!', '(', ')', '=', '&', '|') // 界符运算符首字符表
+        this.operatorOrDelimiter = new Array('!', '(', ')', '>', '<', '>=', '<=', '==', '!=', '&&', '||') // 界符运算符表 3 - 9
+        this.singleOperatorOrDelimiter = new Array('!', '(', ')','>', '<') //单字符界位运算符表  3 - 7
+        this.doubleOperatorOrDelimiter = new Array('>=', '<=','==', '!=', '&&', '||') //双字符界位运算符表 8 - 13
+        this.firstOperatorOrDelimiter = new Array('!', '(', ')', '=', '&', '|', '<', '>') // 界符运算符首字符表
         this.IDentifierTb = new Array() // 标识符表   100
         this.ip = -1 // 扫描指针
         this.tokenArray = new Array()
@@ -370,14 +370,15 @@ class SyntacticAnalyzer{
         this.predictiveAnTb.set('E,COUNT', 'E->TB')
         this.predictiveAnTb.set('E,(', 'E->TB')
 
-        this.predictiveAnTb.set('B,&&', 'EB->OT')
-        this.predictiveAnTb.set('B,||', 'EB->OT')
-        this.predictiveAnTb.set('B,ε,', 'EB->ε')
+        this.predictiveAnTb.set('B,&&', 'B->OE')
+        this.predictiveAnTb.set('B,||', 'B->OE')
+        this.predictiveAnTb.set('B,ε,', 'B->ε')
 
         this.predictiveAnTb.set('T,!', 'T->!T')
         this.predictiveAnTb.set('T,null', 'T->ICI')
         this.predictiveAnTb.set('T,ID', 'T->ICI')
         this.predictiveAnTb.set('T,COUNT', 'T->ICI')
+        this.predictiveAnTb.set('T,(', 'T->(T)')
 
         this.predictiveAnTb.set('I,null', new Array('I','-','>','null'))
         this.predictiveAnTb.set('I,ID', new Array('I', '-', '>', 'ID'))
@@ -385,6 +386,10 @@ class SyntacticAnalyzer{
 
         this.predictiveAnTb.set('C,==', new Array('C', '-', '>', '=='))
         this.predictiveAnTb.set('C,!=', new Array('C', '-', '>', '!='))
+        this.predictiveAnTb.set('C,>', 'C->>')
+        this.predictiveAnTb.set('C,<', 'C-><')
+        this.predictiveAnTb.set('C,>=', new Array('C', '-', '>', '>='))
+        this.predictiveAnTb.set('C,<=', new Array('C', '-', '>', '<='))
 
         this.predictiveAnTb.set('O,&&', new Array('O', '-', '>', '&&'))
         this.predictiveAnTb.set('O,||', new Array('O', '-', '>', '||'))
@@ -399,8 +404,10 @@ class SyntacticAnalyzer{
         var ch = this.tokenArray[++this.ip]
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            if(ch == undefined)
-                throw '指针越界'
+            if(ch == undefined){
+                console.log('成功')
+                return
+            }
             if(ch.getNum() == this.COUNT)
                 ch = new Token('COUNT', this.COUNT)
             else if(ch.getNum() == this.ID)
@@ -423,7 +430,6 @@ class SyntacticAnalyzer{
             else { // 输出产生式， 弹出栈顶符号
                 // console.log(b +':  ' + selectValue)
                 this.stack.pop()
-                
                 for(var a = selectValue.length - 1; a >= 0; a--){
                     if(selectValue[a] == '>')
                         break;
@@ -472,7 +478,7 @@ mapperSQL.getRetSQL("selectUsers",1)
 console.log("**********")
 
 var project = 'user_Name == null && user_ID != 2'
-var project2 = 'Users_123_Name == users_name || users_password != users_Name'
+var project2 = 'users_password != null && users_id >= 3'
 
 
 var lexer = new Lexer(project2)
@@ -481,6 +487,9 @@ console.log(project)
 console.log(lexer.getTokenArray())
 console.log('IDentifierTb: ')
 console.log(lexer.IDentifierTbToString())
+
+
+
 
 console.log('\n\n\n\n')
 var syntacticAnalyzer = new SyntacticAnalyzer(lexer.getTokenArray())
