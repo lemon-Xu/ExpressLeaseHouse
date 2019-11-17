@@ -1,0 +1,26 @@
+.login_button_input{
+    width: 377px;
+    height: 39px;
+    margin-bottom: 20px;
+}
+  
+.login_p_a{
+    width: 377px;
+    height: 21px;
+    margin-bottom: 20px;
+}
+
+.board{
+    width: 423px;
+    background-color: rgb(212, 230, 241);
+    border: 1px solid black;
+    padding-left: 23px;
+    padding-right: 23px;
+    margin-top: 35px;
+    margin-bottom: 35px;
+    
+}
+.floatRight{
+    float: right;
+}
+  
