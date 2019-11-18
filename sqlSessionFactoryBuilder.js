@@ -322,7 +322,7 @@ class Lexer{
             receiver += ch
             ch = this.project[++this.ip]
             while(this.isDigit(ch)){ // 后跟数字
-                receiver.push(ch)
+                receiver += ch
                 ch = this.project[++this.ip]
             }
             this.tokenArray.push(new Token(receiver, 99)) // 常数
@@ -353,66 +353,122 @@ class Lexer{
     }
 }
 
+class SemanticSymbol{
+    constructor(symbol, behavior){
+        this.symbol = symbol
+        this.behavior = behavior
+    }
+
+    toBehavior(){
+        this.behavior()
+    }
+}
+
 class SyntacticAnalyzer{
     constructor(tokenArray){
         this.COUNT = 99
         this.ID = 100
         this.ip = -1 // 扫描指针
         this.tokenArray = tokenArray // token序列
+        this.tokenArray.push(new Token('ε', 1111111) )// ε =  Alt + 42693
         this.stack = new Array('$','E')
         this.outPut = new Array()
-        this.predictiveAnTb = new Map()
-        this.terminalSymbol = new Array('E', 'B', 'T', 'I', 'C', 'O')
+        this.predictiveAnTb = new Map() // 预测表
+        this.terminalSymbol = new Array('E', 'B', 'F', 'C', 'O') // 非终结符
 
-        this.predictiveAnTb.set('E,!', 'E->TB')
-        this.predictiveAnTb.set('E,null', 'E->TB')
-        this.predictiveAnTb.set('E,ID', 'E->TB')
-        this.predictiveAnTb.set('E,COUNT', 'E->TB')
-        this.predictiveAnTb.set('E,(', 'E->TB')
+        this.predictiveAnTb.set('E,null', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B')) 
+        this.predictiveAnTb.set('E,ID', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B'))
+        this.predictiveAnTb.set('E,COUNT', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B'))
 
-        this.predictiveAnTb.set('B,&&', 'B->OE')
-        this.predictiveAnTb.set('B,||', 'B->OE')
-        this.predictiveAnTb.set('B,ε,', 'B->ε')
+        this.predictiveAnTb.set('B,&&', new Array('B', '-', '>', 'C', '{a4}', 'E', '{a5}'))
+        this.predictiveAnTb.set('B,||', new Array('B', '-', '>', 'C', '{a4}', 'E', '{a5}'))
+        this.predictiveAnTb.set('B,ε', new Array('B', '-', '>', 'ε', '{a6}'))
 
-        this.predictiveAnTb.set('T,!', 'T->!T')
-        this.predictiveAnTb.set('T,null', 'T->ICI')
-        this.predictiveAnTb.set('T,ID', 'T->ICI')
-        this.predictiveAnTb.set('T,COUNT', 'T->ICI')
-        this.predictiveAnTb.set('T,(', 'T->(T)')
+        this.predictiveAnTb.set('F,null', new Array('F','-','>','null', '{a15}'))
+        this.predictiveAnTb.set('F,ID', new Array('F', '-', '>', 'ID', '{a16}'))
+        this.predictiveAnTb.set('F,COUNT', new Array('F', '-', '>', 'COUNT', '{a17}'))
 
-        this.predictiveAnTb.set('I,null', new Array('I','-','>','null'))
-        this.predictiveAnTb.set('I,ID', new Array('I', '-', '>', 'ID'))
-        this.predictiveAnTb.set('I,COUNT', new Array('I', '-', '>', 'COUNT'))
+        this.predictiveAnTb.set('O,==', new Array('O', '-', '>', '==', '{a7}'))
+        this.predictiveAnTb.set('O,!=', new Array('O', '-', '>', '!=', '{a8}'))
+        this.predictiveAnTb.set('O,>', new Array('O', '-', '>', '>', '{a9}'))
+        this.predictiveAnTb.set('O,<', new Array('O', '-', '>', '<', '{a10}'))
+        this.predictiveAnTb.set('O,>=', new Array('O', '-', '>', '>=', '{a11}'))
+        this.predictiveAnTb.set('O,<=', new Array('O', '-', '>', '<=', '{a12}'))
 
-        this.predictiveAnTb.set('C,==', new Array('C', '-', '>', '=='))
-        this.predictiveAnTb.set('C,!=', new Array('C', '-', '>', '!='))
-        this.predictiveAnTb.set('C,>', 'C->>')
-        this.predictiveAnTb.set('C,<', 'C-><')
-        this.predictiveAnTb.set('C,>=', new Array('C', '-', '>', '>='))
-        this.predictiveAnTb.set('C,<=', new Array('C', '-', '>', '<='))
+        this.predictiveAnTb.set('C,&&', new Array('C', '-', '>', '&&', '{a13}'))
+        this.predictiveAnTb.set('C,||', new Array('C', '-', '>', '||', '{a14}'))
 
-        this.predictiveAnTb.set('O,&&', new Array('O', '-', '>', '&&'))
-        this.predictiveAnTb.set('O,||', new Array('O', '-', '>', '||'))
+
+        this.semanticSymbol = new Array() // 语义符号
+        this.semanticSymbolSize = 17 
+        this.semanticSymbolTb = new Map()
+        this.semanticStack = new Array()
+        
+        for(var i = 1; i <= this.semanticSymbolSize; i++){
+            this.semanticSymbol.push('{a' + i + '}')    
+        }
+        
+        this.semanticSymbolTb.set('E,null', new Array('{a1}', '{a2}', '{a3}') )
+        this.semanticSymbolTb.set('E,ID', new Array('{a1}', '{a2}', '{a3}') )
+        this.semanticSymbolTb.set('E,COUNT', new Array('{a1}', '{a2}', '{a3}') )
+
+        this.semanticSymbolTb.set('B,&&', new Array('{a4}', '{a5}') )
+        this.semanticSymbolTb.set('B,||', new Array('{a4}', '{a5}') )
+        this.semanticSymbolTb.set('B,ε', new Array('{a4}', '{a5}') )
+
+        this.semanticSymbolTb.set('F,null', new Array('{a15}') )
+        this.semanticSymbolTb.set('F,ID', new Array('{a16}') )
+        this.semanticSymbolTb.set('F,COUNT', new Array('{a17}') )
+
+        this.semanticSymbolTb.set('O,==', new Array('{a7}') )
+        this.semanticSymbolTb.set('O,!=', new Array('{a8}') )
+        this.semanticSymbolTb.set('O,>', new Array('{a9}') )
+        this.semanticSymbolTb.set('O,<', new Array('{a10}') )
+        this.semanticSymbolTb.set('O,>=', new Array('{a11}') )
+        this.semanticSymbolTb.set('O,<=', new Array('{a12}') )
+
+        this.semanticSymbolTb.set('C,&&', new Array('{a13}') )
+        this.semanticSymbolTb.set('C,||', new Array('{a14}') )
+       
     }
 
-    selectTb(a, b){
+    selectPATb(a, b){
         return this.predictiveAnTb.get(a+','+b)
     }
 
+    selectSSTb(a, b){
+        return this.semanticSymbolTb.get(a+','+b)
+    }
+
+    semantic(x, ){
+        this.stack.pop()
+    }
+
+  
+    toAltToken(ch){
+        if(ch.getNum() == this.COUNT)
+            return ch = new Token('COUNT', this.COUNT)
+        else if(ch.getNum() == this.ID)
+            return ch = new Token('ID', this.ID)
+        return ch
+    }
+
     scanner(){
+        var a12 = ''
         var x = this.stack[this.stack.length - 1] // 栈顶符号
         var ch = this.tokenArray[++this.ip]
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            if(ch == undefined){
-                console.log('成功')
-                return
+            var saveCh = ch
+            console.log(this.stack)
+            if(this.semanticSymbol.indexOf(x) != -1){ // x在语义行为符号表中
+                this.semantic()
+                x = this.stack[this.stack.length - 1]
+                continue
             }
-            if(ch.getNum() == this.COUNT)
-                ch = new Token('COUNT', this.COUNT)
-            else if(ch.getNum() == this.ID)
-                ch = new Token('ID', this.ID)
-            var selectValue = this.selectTb(x, ch.getString())
+            ch = this.toAltToken(ch)
+           
+            var selectPAValue = this.selectPATb(x, ch.getString())
             var b = (x + ',' + ch.getString())
             if(x == ch.getString()){ // X等于ip所指的符号ch,执行栈的弹出操作
                 this.stack.pop()
@@ -420,32 +476,104 @@ class SyntacticAnalyzer{
             }
             else if(this.terminalSymbol.indexOf(x) == -1){ // x不在非终结符表中
                 console.log(this.stack)
+                console.log(this.semanticSymbol)
                 throw 'error, 语法错误: \'' + x + '\' 不在非终结符表中'
             }
-            else if(selectValue == undefined){
+            else if(selectPAValue == undefined){
                 //console.log(this.predictiveAnTb)
                 console.log(this.stack)
                 throw 'error, 语法错误: '  + b + ' 是一个报错条目'
             }
             else { // 输出产生式， 弹出栈顶符号
-                // console.log(b +':  ' + selectValue)
+                // console.log(b +':  ' + selectPAValue)
                 this.stack.pop()
-                for(var a = selectValue.length - 1; a >= 0; a--){
-                    if(selectValue[a] == '>')
+                for(var a = selectPAValue.length - 1; a >= 0; a--){ // 把生成式倒序压入栈中
+                    if(selectPAValue[a] == '>')
                         break;
-                    this.stack.push(selectValue[a])
+                    this.stack.push(selectPAValue[a])
                 }
 
+                // 打印生成式
                 var log = ''
-                for(var b in selectValue){
-                    if(selectValue[b] != ',')
-                        log += selectValue[b]
+                for(var b in selectPAValue){
+                    if(selectPAValue[b] != ',')
+                        log += selectPAValue[b]
                 }
                 console.log(log)
+
+                // // 语义动作进栈
+                // for(var c in selectSSValue){
+                //     this.stack.push(selectSSValue[c])
+                // }
+                
             }
             x = this.stack[this.stack.length - 1]
         }
+        console.log('成功')
+        console.log(this.semanticStack)
     }
+
+    // scanner(){
+    //     var a12 = ''
+    //     var x = this.stack[this.stack.length - 1] // 栈顶符号
+    //     var ch = this.tokenArray[++this.ip]
+    //     while(x != '$'){ // 栈非空
+    //         ch = this.tokenArray[this.ip]
+    //         var saveCh = ch
+    //         console.log(this.stack)
+    //         if(this.semanticSymbol.indexOf(x) != -1){ // x在语义行为符号表中
+    //             a12 += this.stack.pop()
+    //             continue
+    //         }
+    //         else if(ch.getNum() == this.COUNT)
+    //             ch = new Token('COUNT', this.COUNT)
+    //         else if(ch.getNum() == this.ID)
+    //             ch = new Token('ID', this.ID)
+    //         var selectPAValue = this.selectPATb(x, ch.getString())
+    //         var selectSSValue = this.selectSSTb(x, ch.getString())
+    //         var b = (x + ',' + ch.getString())
+    //         if(x == ch.getString()){ // X等于ip所指的符号ch,执行栈的弹出操作
+    //             this.stack.pop()
+    //             this.ip++ // 指针下移
+    //         }
+    //         else if(this.terminalSymbol.indexOf(x) == -1){ // x不在非终结符表中
+    //             console.log(this.stack)
+    //             console.log(this.semanticSymbol)
+    //             throw 'error, 语法错误: \'' + x + '\' 不在非终结符表中'
+    //         }
+    //         else if(selectPAValue == undefined){
+    //             //console.log(this.predictiveAnTb)
+    //             console.log(this.stack)
+    //             throw 'error, 语法错误: '  + b + ' 是一个报错条目'
+    //         }
+    //         else { // 输出产生式， 弹出栈顶符号
+    //             // console.log(b +':  ' + selectPAValue)
+    //             this.stack.pop()
+    //             for(var a = selectPAValue.length - 1; a >= 0; a--){ // 把生成式倒序压入栈中
+    //                 if(selectPAValue[a] == '>')
+    //                     break;
+    //                 this.stack.push(selectPAValue[a])
+    //             }
+
+    //             // 打印生成式
+    //             var log = ''
+    //             for(var b in selectPAValue){
+    //                 if(selectPAValue[b] != ',')
+    //                     log += selectPAValue[b]
+    //             }
+    //             console.log(log)
+
+    //             // // 语义动作进栈
+    //             // for(var c in selectSSValue){
+    //             //     this.stack.push(selectSSValue[c])
+    //             // }
+                
+    //         }
+    //         x = this.stack[this.stack.length - 1]
+    //     }
+    //     console.log('成功')
+    //     console.log(this.semanticStack)
+    // }
 
     tbToString(){
         return this.predictiveAnTb
@@ -477,11 +605,11 @@ mapperSQL.build()
 mapperSQL.getRetSQL("selectUsers",1)
 console.log("**********")
 
-var project = 'user_Name == null && user_ID != 2'
+var project = 'user_Name == null && user_ID != 12'
 var project2 = 'users_password != null && users_id >= 3'
 
 
-var lexer = new Lexer(project2)
+var lexer = new Lexer(project)
 lexer.scannerProject()
 console.log(project)
 console.log(lexer.getTokenArray())
