@@ -364,6 +364,27 @@ class SemanticSymbol{
     }
 }
 
+class SemanticBehavior{
+    constructor(string, fun){
+        this.string = string
+        this.fun = fun
+    }
+    execute(variableHeap, stack, id){
+        this.fun(variableHeap, stack, id)
+    }
+    
+}
+
+class stringObject{
+    constructor(string){
+        this.string = string
+    }
+
+    toString(){
+        return this.string
+    }
+}
+
 class SyntacticAnalyzer{
     constructor(tokenArray){
         this.COUNT = 99
@@ -371,32 +392,32 @@ class SyntacticAnalyzer{
         this.ip = -1 // 扫描指针
         this.tokenArray = tokenArray // token序列
         this.tokenArray.push(new Token('ε', 1111111) )// ε =  Alt + 42693
-        this.stack = new Array('$','E')
+        this.stack = new Array(new stringObject('$'),'E')
         this.outPut = new Array()
         this.predictiveAnTb = new Map() // 预测表
         this.terminalSymbol = new Array('E', 'B', 'F', 'C', 'O') // 非终结符
 
-        this.predictiveAnTb.set('E,null', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B')) 
-        this.predictiveAnTb.set('E,ID', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B'))
-        this.predictiveAnTb.set('E,COUNT', new Array('E', '-', '>', 'F', '{a1}', 'O', '{a2}', 'F', '{a3}', 'B'))
+        this.predictiveAnTb.set('E,null', new Array('E', '-', '>', 'F', new stringObject('{a1}'), 'O', new stringObject('{a2}'), 'F', new stringObject('{a3}'), 'B') ) 
+        this.predictiveAnTb.set('E,ID', new Array('E', '-', '>', 'F', new stringObject('{a1}'), 'O', new stringObject('{a2}'), 'F', new stringObject('{a3}'), 'B') )
+        this.predictiveAnTb.set('E,COUNT', new Array('E', '-', '>', 'F', new stringObject('{a1}'), 'O', new stringObject('{a2}'), 'F', new stringObject('{a3}'), 'B') )
 
-        this.predictiveAnTb.set('B,&&', new Array('B', '-', '>', 'C', '{a4}', 'E', '{a5}'))
-        this.predictiveAnTb.set('B,||', new Array('B', '-', '>', 'C', '{a4}', 'E', '{a5}'))
-        this.predictiveAnTb.set('B,ε', new Array('B', '-', '>', 'ε', '{a6}'))
+        this.predictiveAnTb.set('B,&&', new Array('B', '-', '>', 'C', new stringObject('{a4}'), 'E', new stringObject('{a5}')))
+        this.predictiveAnTb.set('B,||', new Array('B', '-', '>', 'C', new stringObject('{a4}'), 'E', new stringObject('{a5}')))
+        this.predictiveAnTb.set('B,ε', new Array('B', '-', '>', 'ε', new stringObject('{a6}')))
 
-        this.predictiveAnTb.set('F,null', new Array('F','-','>','null', '{a15}'))
-        this.predictiveAnTb.set('F,ID', new Array('F', '-', '>', 'ID', '{a16}'))
-        this.predictiveAnTb.set('F,COUNT', new Array('F', '-', '>', 'COUNT', '{a17}'))
+        this.predictiveAnTb.set('F,null', new Array('F','-','>','null', new stringObject('{a15}')))
+        this.predictiveAnTb.set('F,ID', new Array('F', '-', '>', 'ID', new stringObject('{a16}')))
+        this.predictiveAnTb.set('F,COUNT', new Array('F', '-', '>', 'COUNT', new stringObject('{a17}')))
 
-        this.predictiveAnTb.set('O,==', new Array('O', '-', '>', '==', '{a7}'))
-        this.predictiveAnTb.set('O,!=', new Array('O', '-', '>', '!=', '{a8}'))
-        this.predictiveAnTb.set('O,>', new Array('O', '-', '>', '>', '{a9}'))
-        this.predictiveAnTb.set('O,<', new Array('O', '-', '>', '<', '{a10}'))
-        this.predictiveAnTb.set('O,>=', new Array('O', '-', '>', '>=', '{a11}'))
-        this.predictiveAnTb.set('O,<=', new Array('O', '-', '>', '<=', '{a12}'))
+        this.predictiveAnTb.set('O,==', new Array('O', '-', '>', '==', new stringObject('{a7}')))
+        this.predictiveAnTb.set('O,!=', new Array('O', '-', '>', '!=', new stringObject('{a8}')))
+        this.predictiveAnTb.set('O,>', new Array('O', '-', '>', '>', new stringObject('{a9}')))
+        this.predictiveAnTb.set('O,<', new Array('O', '-', '>', '<', new stringObject('{a10}')))
+        this.predictiveAnTb.set('O,>=', new Array('O', '-', '>', '>=', new stringObject('{a11}')))
+        this.predictiveAnTb.set('O,<=', new Array('O', '-', '>', '<=', new stringObject('{a12}')))
 
-        this.predictiveAnTb.set('C,&&', new Array('C', '-', '>', '&&', '{a13}'))
-        this.predictiveAnTb.set('C,||', new Array('C', '-', '>', '||', '{a14}'))
+        this.predictiveAnTb.set('C,&&', new Array('C', '-', '>', '&&', new stringObject('{a13}')))
+        this.predictiveAnTb.set('C,||', new Array('C', '-', '>', '||', new stringObject('{a14}')))
 
 
         this.semanticSymbol = new Array() // 语义符号
@@ -408,27 +429,124 @@ class SyntacticAnalyzer{
             this.semanticSymbol.push('{a' + i + '}')    
         }
         
-        this.semanticSymbolTb.set('E,null', new Array('{a1}', '{a2}', '{a3}') )
-        this.semanticSymbolTb.set('E,ID', new Array('{a1}', '{a2}', '{a3}') )
-        this.semanticSymbolTb.set('E,COUNT', new Array('{a1}', '{a2}', '{a3}') )
+        this.semanticSymbolTb.set('{a1}', new SemanticBehavior('{a1}', function(variableHeap, stack, id){
+            stack[stack.length - 3].LV = stack[stack.length - 1].V
+        }))
 
-        this.semanticSymbolTb.set('B,&&', new Array('{a4}', '{a5}') )
-        this.semanticSymbolTb.set('B,||', new Array('{a4}', '{a5}') )
-        this.semanticSymbolTb.set('B,ε', new Array('{a4}', '{a5}') )
+        this.semanticSymbolTb.set('{a2}', new SemanticBehavior('{a2}', function(variableHeap, stack, id){
+            stack[stack.length - 3].LV = stack[stack.length - 1].LV
+            stack[stack.length - 3].O = stack[stack.length - 1].O
+        }))
 
-        this.semanticSymbolTb.set('F,null', new Array('{a15}') )
-        this.semanticSymbolTb.set('F,ID', new Array('{a16}') )
-        this.semanticSymbolTb.set('F,COUNT', new Array('{a17}') )
+        this.semanticSymbolTb.set('{a3}', new SemanticBehavior('{a3}', function(variableHeap, stack, id){ 
+            if(stack[stack.length - 1].O == '=='){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV == stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+            else if(stack[stack.length - 1].O == '!='){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV != stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+            else if(stack[stack.length - 1].O == '>'){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV > stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+            else if(stack[stack.length - 1].O == '>='){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV >= stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+            else if(stack[stack.length - 1].O == '<'){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV < stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+            else if(tstack[stack.length - 1].O == '<='){
+                stack[stack.length - 3].LLV = stack[stack.length - 1].LV <= stack[stack.length - 1].V
+                console.log('xxxxxxxxxxxx'+stack[stack.length - 1].LV == stack[stack.length - 1].V)
+            }
+        }))
 
-        this.semanticSymbolTb.set('O,==', new Array('{a7}') )
-        this.semanticSymbolTb.set('O,!=', new Array('{a8}') )
-        this.semanticSymbolTb.set('O,>', new Array('{a9}') )
-        this.semanticSymbolTb.set('O,<', new Array('{a10}') )
-        this.semanticSymbolTb.set('O,>=', new Array('{a11}') )
-        this.semanticSymbolTb.set('O,<=', new Array('{a12}') )
+        this.semanticSymbolTb.set('{a4}', new SemanticBehavior('{a4}', function(variableHeap, stack, id){
+           stack[stack.length - 3].LLV = stack[stack.length - 1].LLV
+           stack[stack.length - 3].C = stack[stack.length - 1].C
+        }))
+        
+        this.semanticSymbolTb.set('{a5}', new SemanticBehavior('{a5}', function(variableHeap, stack, id){
+           if(this.C == '&&'){
+               console.log(stack[stack.length - 2].LLV && stack[stack.length - 1].RRL)
+           }
+           else if(this.C == '||'){
+               console.log(stack[stack.length - 2].LLV || stack[stack.length - 1].RRL)
+           }
+        }))
+        
+        this.semanticSymbolTb.set('{a6}', new SemanticBehavior('{a6}', function(variableHeap, stack, id){
+            console.log(stack.length)
+            console.log(stack)
+           if(stack.length - 2 <= 0){
+               stack[stack.length - 2].LLV = stack[stack.length - 1].LLV
+               console.log('*****'+stack[stack.length - 1].LLV)
+           }
+           else {
+               console.log(stack[stack.length - 1].LLV)
+               stack[stack.length - 2].LLV = stack[stack.length - 1].LLV
+           }
+        }))
 
-        this.semanticSymbolTb.set('C,&&', new Array('{a13}') )
-        this.semanticSymbolTb.set('C,||', new Array('{a14}') )
+        this.semanticSymbolTb.set('{a7}', new SemanticBehavior('{a7}', function(variableHeap, stack, id){
+           stack[stack.length - 2].O = '=='
+        }))
+
+        this.semanticSymbolTb.set('{a8}', new SemanticBehavior('{a8}', function(variableHeap, stack, id){
+            stack[stack.length - 2].O = '!='
+        }))
+
+        this.semanticSymbolTb.set('{a9}', new SemanticBehavior('{a9}', function(variableHeap, stack, id){
+           stack[stack.length - 2].O = '>'
+        }))
+
+        this.semanticSymbolTb.set('{a10}', new SemanticBehavior('{a10}', function(variableHeap, stack, id){
+            stack[stack.length - 2].O = '<'
+        }))
+
+        this.semanticSymbolTb.set('{a11}', new SemanticBehavior('{a11}', function(variableHeap, stack, id){
+            stack[stack.length - 2].O = '>='
+        }))
+        
+        this.semanticSymbolTb.set('{a12}', new SemanticBehavior('{a12}', function(variableHeap, stack, id){
+            stack[stack.length - 2].O = '<='
+        }))
+
+        this.semanticSymbolTb.set('{a13}', new SemanticBehavior('{a13}', function(variableHeap, stack, id){
+            stack[stack.length - 2].C = "&&" 
+           
+        }))
+
+        this.semanticSymbolTb.set('{a14}', new SemanticBehavior('{a14}', function(variableHeap, stack, id){
+            stack[stack.length - 2].C = "||" 
+           
+        }))
+
+        this.semanticSymbolTb.set('{a15}', new SemanticBehavior('{a15}', function(variableHeap, stack, id){
+            stack[stack.length - 2].V = null           
+        }))
+
+        this.semanticSymbolTb.set('{a16}', new SemanticBehavior('{a16}', function(variableHeap, stack, id){
+            stack[stack.length - 2].V = variableHeap[id]
+           
+        }))
+
+        this.semanticSymbolTb.set('{a17}', new SemanticBehavior('{a17}', function(variableHeap, stack, id){
+            stack[stack.length - 2].V = variableHeap[id]
+           
+        }))
+
+
+        // this.semanticSymbolTb.set('{a18}', new SemanticBehavior('{a18}', function(variableHeap, stack, id){
+        //     stack[stack.length - 2].LLV = stack[stack.length - 1]
+           
+        // }))
+        
+        
        
     }
 
@@ -436,12 +554,18 @@ class SyntacticAnalyzer{
         return this.predictiveAnTb.get(a+','+b)
     }
 
-    selectSSTb(a, b){
-        return this.semanticSymbolTb.get(a+','+b)
+    selectSSTb(a){
+        return this.semanticSymbolTb.get('{' + a + '}')
     }
 
-    semantic(x, ){
-        this.stack.pop()
+    toSemantic(x, variableHeap, stack, id){
+        // console.log(x)
+        var a = this.semanticSymbolTb.get(x)
+        if(a == undefined)
+            throw '语义动作不存在:' + x
+        console.log(a)
+        // console.log(a)
+        a.execute(variableHeap, stack, id)
     }
 
   
@@ -453,35 +577,41 @@ class SyntacticAnalyzer{
         return ch
     }
 
-    scanner(){
+    scanner(variableHeap){
         var a12 = ''
         var x = this.stack[this.stack.length - 1] // 栈顶符号
         var ch = this.tokenArray[++this.ip]
+        var saveCh = null
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            var saveCh = ch
-            console.log(this.stack)
-            if(this.semanticSymbol.indexOf(x) != -1){ // x在语义行为符号表中
-                this.semantic()
+            
+            if(this.semanticSymbol.indexOf(x.toString()) != -1){ // x在语义行为符号表中
+              
+               console.log(x)
+                this.toSemantic(x.toString(), variableHeap, this.stack, saveCh.getString())
+                this.stack.pop()
+                console.log(this.stack)
                 x = this.stack[this.stack.length - 1]
+               
                 continue
             }
-            ch = this.toAltToken(ch)
+            saveCh = ch
+            var chToken = this.toAltToken(ch)
            
-            var selectPAValue = this.selectPATb(x, ch.getString())
-            var b = (x + ',' + ch.getString())
-            if(x == ch.getString()){ // X等于ip所指的符号ch,执行栈的弹出操作
+            var selectPAValue = this.selectPATb(x, chToken.getString())
+            var b = (x + ',' + chToken.getString())
+            if(x == chToken.getString()){ // X等于ip所指的符号chToken,执行栈的弹出操作
+                
                 this.stack.pop()
                 this.ip++ // 指针下移
             }
             else if(this.terminalSymbol.indexOf(x) == -1){ // x不在非终结符表中
-                console.log(this.stack)
-                console.log(this.semanticSymbol)
+               
                 throw 'error, 语法错误: \'' + x + '\' 不在非终结符表中'
             }
             else if(selectPAValue == undefined){
                 //console.log(this.predictiveAnTb)
-                console.log(this.stack)
+                
                 throw 'error, 语法错误: '  + b + ' 是一个报错条目'
             }
             else { // 输出产生式， 弹出栈顶符号
@@ -510,7 +640,7 @@ class SyntacticAnalyzer{
             x = this.stack[this.stack.length - 1]
         }
         console.log('成功')
-        console.log(this.semanticStack)
+        console.log(this.stack)
     }
 
     // scanner(){
@@ -607,7 +737,10 @@ console.log("**********")
 
 var project = 'user_Name == null && user_ID != 12'
 var project2 = 'users_password != null && users_id >= 3'
-
+var heap = {
+    'user_Name': 'lemon',
+    'user_ID': '123'
+}
 
 var lexer = new Lexer(project)
 lexer.scannerProject()
@@ -624,7 +757,7 @@ var syntacticAnalyzer = new SyntacticAnalyzer(lexer.getTokenArray())
 console.log(lexer.getTokenArray)
 console.log(syntacticAnalyzer)
 console.log('\n\n\n\n')
-syntacticAnalyzer.scanner()
+syntacticAnalyzer.scanner(heap)
 // console.log(syntacticAnalyzer.tbToString())
 // console.log(syntacticAnalyzer.selectTb('E','!'))
 // console.log(syntacticAnalyzer.selectTb('E','!='))
