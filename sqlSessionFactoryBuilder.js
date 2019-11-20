@@ -232,18 +232,21 @@ class Token{
 }
 
 class Lexer{
-    constructor(project){
+    constructor(){
         this.reserveWord = new Array('null', 'true', 'false') // 保留字表 0-2
         this.operatorOrDelimiter = new Array('!', '(', ')', '>', '<', '>=', '<=', '==', '!=', '&&', '||') // 界符运算符表 3 - 9
         this.singleOperatorOrDelimiter = new Array('!', '(', ')','>', '<') //单字符界位运算符表  3 - 7
         this.doubleOperatorOrDelimiter = new Array('>=', '<=','==', '!=', '&&', '||') //双字符界位运算符表 8 - 13
         this.firstOperatorOrDelimiter = new Array('!', '(', ')', '=', '&', '|', '<', '>') // 界符运算符首字符表
         this.IDentifierTb = new Array() // 标识符表   100
-        this.ip = -1 // 扫描指针
-        this.tokenArray = new Array()
-        this.project = project // 要扫描的文本
     }
     
+    setProject(project){
+        this.project = project // 要扫描的文本
+        this.ip = -1 // 扫描指针
+        this.tokenArray = new Array()
+    }
+
     searchReserve(word){ // 查找保留字
         for(var a in this.reserveWord) {
             if(word == this.reserveWord[a])
@@ -389,15 +392,14 @@ class SyntacticAnalyzer{
     constructor(tokenArray){
         this.COUNT = 99
         this.ID = 100
-        this.ip = -1 // 扫描指针
-        this.tokenArray = tokenArray // token序列
-        this.tokenArray.push(new Token('ε', 111))// ε =  Alt + 42693
-        this.tokenArray.push('$')
-        this.stack = new Array(new stringObject('$'),'E')
-        this.outPut = new Array()
+        // this.ip = -1 // 扫描指针
+        // this.tokenArray = tokenArray // token序列
+        // this.tokenArray.push(new Token('ε', 111))// ε =  Alt + 42693
+        // this.tokenArray.push('$')
+        // this.stack = new Array(new stringObject('$'),'E')
+        // this.outPut = new Array()
         this.predictiveAnTb = new Map() // 预测表
         this.terminalSymbol = new Array('E', 'B', 'F', 'C', 'O') // 非终结符
-        this.variableStack = new Array()
 
         this.predictiveAnTb.set('E,null', new Array('E', '-', '>', 'F', 'O', 'F', new stringObject('{a1}'), 'B') ) 
         this.predictiveAnTb.set('E,ID', new Array('E', '-', '>', 'F', 'O', 'F', new stringObject('{a1}'), 'B') )
@@ -434,24 +436,24 @@ class SyntacticAnalyzer{
         this.semanticSymbolTb.set('{a1}', new SemanticBehavior('{a1}', function(variableHeap, stack, id){ 
             var v
             if(stack[stack.length - 2] == '=='){
-                v = stack[stack.length - 1] == stack[stack.length - 3]
+                v = stack[stack.length - 3] == stack[stack.length - 1]
             }
             else if(stack[stack.length - 2] == '!='){
-                v = stack[stack.length - 1] != stack[stack.length - 3]
+                v = stack[stack.length - 3] != stack[stack.length - 1]
             }
             else if(stack[stack.length - 2] == '>'){
-                v = stack[stack.length - 1] > stack[stack.length - 3]
+                v = stack[stack.length - 3] > stack[stack.length - 1]
             }
             else if(stack[stack.length - 2] == '>='){
-                v = stack[stack.length - 1] >= stack[stack.length - 3]
+                v = stack[stack.length - 3] >= stack[stack.length - 1]
             }
             else if(stack[stack.length - 2] == '<'){
-                v = stack[stack.length - 1] < stack[stack.length - 3]
+                v = stack[stack.length - 3] < stack[stack.length - 1]
             }
             else if(stack[stack.length - 2] == '<='){
-                v = stack[stack.length - 1] <= stack[stack.length - 3]
+                v = stack[stack.length - 3] <= stack[stack.length - 1]
             }
-            //console.log('xxxxxxxxxxxxxx                      ' + v)
+            console.log('xxxxxxxxxxxxxx                      ' + v)
             for(var i = 1; i <= 3; i++)
                 stack.pop()
             stack.push(v)
@@ -474,33 +476,34 @@ class SyntacticAnalyzer{
             stack.push(id)
         }))
         this.semanticSymbolTb.set('{a7}', new SemanticBehavior('{a7}', function(variableHeap, stack, id){
-            var o = stack[stack.length - 2]
+            var o = stack[1]
             var v 
             if(o == '&&'){
-                v = stack[stack.length - 1] && stack[stack.length - 3]
+                v = stack[0] && stack[2]
             }
             else if(o == '||'){
-                v = stack[stack.length - 1] || stack[stack.length - 3]
+                v = stack[0] || stack[2]
             }
-            //console.log('xxxxxxxxxxxx                                                ' + v)
-            for(var i = 1; i <= 3; i++)
-                stack.pop()
-            stack.push(v)
-            
+            console.log('xxxxxxxxxxxx                                                ' + v)
+            for(var a = 1; a <= 3; a++)
+                stack.shift()
+            stack.unshift(v)
         }))
         this.semanticSymbolTb.set('{a8}', new SemanticBehavior('{a8}', function(variableHeap, stack, id){
-            stack.push(id)
+            stack.push(parseFloat(id))
         }))
 
-        
+    }
 
-        // this.semanticSymbolTb.set('{a18}', new SemanticBehavior('{a18}', function(variableHeap, stack, id){
-        //     stack[stack.length - 2].LLV = stack[stack.length - 1]
-           
-        // }))
-        
-        
-       
+    setTokenArray(tokenArray){
+        this.tokenArray = tokenArray
+        this.tokenArray = tokenArray // token序列
+        this.tokenArray.push(new Token('ε', 111))// ε =  Alt + 42693
+        this.tokenArray.push('$')
+        this.stack = new Array(new stringObject('$'),'E')
+        this.outPut = new Array()
+        this.ip = -1 // 扫描指针
+        this.variableStack = new Array()
     }
 
     selectPATb(a, b){
@@ -538,10 +541,10 @@ class SyntacticAnalyzer{
             
             if(this.semanticSymbol.indexOf(x.toString()) != -1){ // x在语义行为符号表中
               
-               // console.log(x)
+                console.log(this.stack)
                 this.toSemantic(x.toString(), variableHeap, this.variableStack, saveCh.getString())
                 this.stack.pop()
-                //console.log(this.variableStack)
+                console.log(this.variableStack)
                 x = this.stack[this.stack.length - 1]
                
                 continue
@@ -596,68 +599,6 @@ class SyntacticAnalyzer{
         console.log(this.variableStack)
     }
 
-    // scanner(){
-    //     var a12 = ''
-    //     var x = this.stack[this.stack.length - 1] // 栈顶符号
-    //     var ch = this.tokenArray[++this.ip]
-    //     while(x != '$'){ // 栈非空
-    //         ch = this.tokenArray[this.ip]
-    //         var saveCh = ch
-    //         console.log(this.stack)
-    //         if(this.semanticSymbol.indexOf(x) != -1){ // x在语义行为符号表中
-    //             a12 += this.stack.pop()
-    //             continue
-    //         }
-    //         else if(ch.getNum() == this.COUNT)
-    //             ch = new Token('COUNT', this.COUNT)
-    //         else if(ch.getNum() == this.ID)
-    //             ch = new Token('ID', this.ID)
-    //         var selectPAValue = this.selectPATb(x, ch.getString())
-    //         var selectSSValue = this.selectSSTb(x, ch.getString())
-    //         var b = (x + ',' + ch.getString())
-    //         if(x == ch.getString()){ // X等于ip所指的符号ch,执行栈的弹出操作
-    //             this.stack.pop()
-    //             this.ip++ // 指针下移
-    //         }
-    //         else if(this.terminalSymbol.indexOf(x) == -1){ // x不在非终结符表中
-    //             console.log(this.stack)
-    //             console.log(this.semanticSymbol)
-    //             throw 'error, 语法错误: \'' + x + '\' 不在非终结符表中'
-    //         }
-    //         else if(selectPAValue == undefined){
-    //             //console.log(this.predictiveAnTb)
-    //             console.log(this.stack)
-    //             throw 'error, 语法错误: '  + b + ' 是一个报错条目'
-    //         }
-    //         else { // 输出产生式， 弹出栈顶符号
-    //             // console.log(b +':  ' + selectPAValue)
-    //             this.stack.pop()
-    //             for(var a = selectPAValue.length - 1; a >= 0; a--){ // 把生成式倒序压入栈中
-    //                 if(selectPAValue[a] == '>')
-    //                     break;
-    //                 this.stack.push(selectPAValue[a])
-    //             }
-
-    //             // 打印生成式
-    //             var log = ''
-    //             for(var b in selectPAValue){
-    //                 if(selectPAValue[b] != ',')
-    //                     log += selectPAValue[b]
-    //             }
-    //             console.log(log)
-
-    //             // // 语义动作进栈
-    //             // for(var c in selectSSValue){
-    //             //     this.stack.push(selectSSValue[c])
-    //             // }
-                
-    //         }
-    //         x = this.stack[this.stack.length - 1]
-    //     }
-    //     console.log('成功')
-    //     console.log(this.semanticStack)
-    // }
-
     tbToString(){
         return this.predictiveAnTb
     }
@@ -692,9 +633,9 @@ var project = 'user_Name == null && user_ID != 12 || users_Name != root'
 var project2 = 'users_password != null && users_id >= 3 '
 var heap = {
     'user_Name': 'lemon',
-    'user_ID': '123',
-    'users_Name': 'lemon-2',
-    'root': 'root'
+    'user_ID': '12',
+    'users_Name': 'lemon',
+    'root': 'root2'
 }
 
 var heap2 = {
@@ -702,22 +643,19 @@ var heap2 = {
     'users_id': 4
 }
 
-var lexer = new Lexer(project2)
+var lexer = new Lexer()
+lexer.setProject(project)
 lexer.scannerProject()
-console.log(project)
-console.log(lexer.getTokenArray())
-console.log('IDentifierTb: ')
-console.log(lexer.IDentifierTbToString())
 
+console.log('----------------------------------------------------------------------')
+var syntacticAnalyzer = new SyntacticAnalyzer()
+syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
+syntacticAnalyzer.scanner(heap)
+console.log('lemon'== null && 12 != 12 || 'lemon' != 'root2')
 
-
-
-console.log('\n\n\n\n')
-var syntacticAnalyzer = new SyntacticAnalyzer(lexer.getTokenArray())
-console.log(lexer.getTokenArray)
-console.log(syntacticAnalyzer)
-console.log('\n\n\n\n')
+console.log('----------------------------------------------------------------------')
+lexer.setProject(project2)
+lexer.scannerProject()
+syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
 syntacticAnalyzer.scanner(heap2)
-// console.log(syntacticAnalyzer.tbToString())
-// console.log(syntacticAnalyzer.selectTb('E','!'))
-// console.log(syntacticAnalyzer.selectTb('E','!='))
+console.log('123' != null && 4 >= 3 )
