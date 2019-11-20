@@ -476,18 +476,37 @@ class SyntacticAnalyzer{
             stack.push(id)
         }))
         this.semanticSymbolTb.set('{a7}', new SemanticBehavior('{a7}', function(variableHeap, stack, id){
-            var o = stack[1]
+            var oIndex = 0
+            for(;oIndex < stack.length; oIndex++){
+                if(stack[oIndex] == '&&')
+                    break
+            }
+            if(oIndex == stack.length)
+                oIndex = 1
+            var o = stack[oIndex]
+            var L = oIndex - 1
+            var R = oIndex + 1
             var v 
             if(o == '&&'){
-                v = stack[0] && stack[2]
+                v = stack[L] && stack[R]
             }
             else if(o == '||'){
-                v = stack[0] || stack[2]
+                v = stack[L] || stack[R]
             }
-            console.log('xxxxxxxxxxxx                                                ' + v)
-            for(var a = 1; a <= 3; a++)
+            console.log('xxxxxxxxxxxx                                                ' + v +'   '+oIndex)
+            if(oIndex != 0){
+                stack.splice(L,1)
+                stack.splice(L,1)
+                stack.splice(L,1)
+                stack.splice(L,0,v)
+            }
+            else{
                 stack.shift()
-            stack.unshift(v)
+                stack.shift()
+                stack.shift()
+                stack.unshift(v)
+            }
+           
         }))
         this.semanticSymbolTb.set('{a8}', new SemanticBehavior('{a8}', function(variableHeap, stack, id){
             stack.push(parseFloat(id))
@@ -602,6 +621,7 @@ class SyntacticAnalyzer{
         console.log('成功')
         //console.log(this.stack)
         //console.log(this.variableStack)
+        return this.variableStack
     }
 
     tbToString(){
@@ -636,7 +656,7 @@ console.log("**********")
 
 var project = 'user_Name == null && user_ID != 12 || users_Name != root'
 var project2 = 'users_password != null && users_id >= 3 '
-var project3 = 'users_IsBan == 1 || users_Name != null && 2 > 4'
+var project3 = 'users_IsBan == 1 || users_Name != null && 2 > 4 || 3 > 5 && 6 < 7'
 var heap = {
     'user_Name': 'lemon',
     'user_ID': '12',
@@ -677,4 +697,5 @@ lexer.scannerProject()
 syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
 console.log(lexer.getTokenArray())
 syntacticAnalyzer.scanner(heap3)
-console.log(1 == 1 || null != null && 2 > 4 )
+console.log(1 == 1 || null != null && 2 > 4 || 3 > 5 && 6 < 7) // true || false && false
+console.log(syntacticAnalyzer.variableStack)
