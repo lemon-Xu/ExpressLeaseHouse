@@ -538,13 +538,14 @@ class SyntacticAnalyzer{
         var saveCh = null
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            
+            console.log(this.stack)
+            console.log(this.variableStack)
             if(this.semanticSymbol.indexOf(x.toString()) != -1){ // x在语义行为符号表中
               
-                console.log(this.stack)
+               
                 this.toSemantic(x.toString(), variableHeap, this.variableStack, saveCh.getString())
                 this.stack.pop()
-                console.log(this.variableStack)
+                
                 x = this.stack[this.stack.length - 1]
                
                 continue
@@ -573,8 +574,12 @@ class SyntacticAnalyzer{
                 // console.log(b +':  ' + selectPAValue)
                 this.stack.pop()
                 for(var a = selectPAValue.length - 1; a >= 0; a--){ // 把生成式倒序压入栈中
-                    if(selectPAValue[a] == '>')
+                    if(selectPAValue[a] == '>'){
+                        if(selectPAValue[a - 1] == '>'){
+                            this.stack.push('>')
+                        }
                         break;
+                    }
                     this.stack.push(selectPAValue[a])
                 }
 
@@ -595,8 +600,8 @@ class SyntacticAnalyzer{
             x = this.stack[this.stack.length - 1]
         }
         console.log('成功')
-        console.log(this.stack)
-        console.log(this.variableStack)
+        //console.log(this.stack)
+        //console.log(this.variableStack)
     }
 
     tbToString(){
@@ -631,6 +636,7 @@ console.log("**********")
 
 var project = 'user_Name == null && user_ID != 12 || users_Name != root'
 var project2 = 'users_password != null && users_id >= 3 '
+var project3 = 'users_IsBan == 1 || users_Name != null && 2 > 4'
 var heap = {
     'user_Name': 'lemon',
     'user_ID': '12',
@@ -641,6 +647,11 @@ var heap = {
 var heap2 = {
     'users_password': '123',
     'users_id': 4
+}
+
+var heap3 = {
+    "users_IsBan": 1,
+    "users_Name": null
 }
 
 var lexer = new Lexer()
@@ -659,3 +670,11 @@ lexer.scannerProject()
 syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
 syntacticAnalyzer.scanner(heap2)
 console.log('123' != null && 4 >= 3 )
+
+console.log('----------------------------------------------------------------------')
+lexer.setProject(project3)
+lexer.scannerProject()
+syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
+console.log(lexer.getTokenArray())
+syntacticAnalyzer.scanner(heap3)
+console.log(1 == 1 || null != null && 2 > 4 )
