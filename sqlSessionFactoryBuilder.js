@@ -88,9 +88,9 @@ class MapperSQLParser{
 
     build(){
         for(var id in this.config){
-            console.log(id)
-            console.log(this.config[id])
-            this.mapperSQL.set(id, new sqlNodeParser(this.config[id]))
+            let b = new sqlNodeParser(this.config[id]) 
+            this.mapperSQL.set(id, b)
+            b.build()
         }
         console.log(this.mapperSQL)
     }
@@ -127,7 +127,18 @@ class sqlNodeParser{
     }
 
     build(){
-    
+        if(this.if != null)
+            this.if.build()
+        if(this.when != null)
+            this.when.build()
+        if(this.otherwise != null)
+            this.otherwise.build()
+        if(this.where != null)
+            this.where.build()
+        if(this.set != null)
+            this.set.build()
+        if(this.foreach != null)
+            this.foreach.build()
     }
 
     getRetSQL(parameter){
@@ -161,18 +172,68 @@ class nodeParser{
         console.log(this.logic)
         console.log(this.sql)
         console.log(node.length)
+        this.tokenSQL = new Array()
+    }
 
+    build(){
+        var lexer = new Lexer()
+        for(let a in this.logic){
+            if(this.logic[a] == undefined)
+                continue
+            lexer.setProject(this.logic[a])
+            lexer.scannerProject()
+            this.tokenSQL.push(lexer.getTokenArray())
+        }
+        console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+        console.log(this.tokenSQL)
+        console.log(this.logic)
     }
 
     getRetSQL(parameter){
-        var arrayLogic = new Array();
+        var ret = new Array()
         for(var a in this.logic){
-            arrayLogic.push(this.logic[a].split(/\s+/))
-            console.log(this.logic[a].split(/\s+/))
+            console.log(this.logic[a])
+            console.log(this.tokenSQL[a])
+            console.log('if')
+            if(this.getBoolean(this.tokenSQL[a], parameter))
+                ret.push(this.getRealSQL(this.sql[a], parameter))
         }
+        var c = this.sql + ' '
+        for(var b in ret){
+            c += ' ' + ret[b]
+        }
+        console.log('c:                  '+c)
+        return c
     }
 
+    getBoolean(tokenArray, heap){
+        var syntacticAnalyzer = new SyntacticAnalyzer()
+        syntacticAnalyzer.setTokenArray(tokenArray)
+        var ret = syntacticAnalyzer.scanner(heap)
+        
+        return ret
+    }
 
+    getRealSQL(sql, parameter){
+        var a = /#{[a-zA-Z_][a-zA-Z_0-9]*}/g
+        var retSQL = sql
+        var parameterArray = sql.match(a)
+        console.log(parameterArray+'\n************************************')
+        for(var a in parameterArray){
+            var str = ''
+            for(var b in parameterArray[a]){
+                if(b<2 || b > parameterArray[a].length - 2)
+                    continue
+                str += parameterArray[a][b]
+            }
+            retSQL += sql.replace(parameterArray[a], parameter[str])
+
+            console.log(parameterArray[a], parameter[str])
+        }
+        console.log(retSQL)
+        return retSQL
+
+    }
 }
 
 class ifNodeParser extends nodeParser{
@@ -544,6 +605,9 @@ class SyntacticAnalyzer{
 
   
     toAltToken(ch){
+        console.log('ch:  '+ch)
+        console.log(this.ip)
+        console.log(this.tokenArray[this.ip])
         if(ch.getNum() == this.COUNT)
             return ch = new Token('COUNT', this.COUNT)
         else if(ch.getNum() == this.ID)
@@ -641,6 +705,8 @@ class SyntacticAnalyzer{
     }
 }
 
+var a = 1
+
 var sqlSession = new SqlSessionFactoryBuilder()
 sqlSession.getResource();
 sqlSession.build();
@@ -651,51 +717,53 @@ var mapperSQL = new MapperSQLParser()
 mapperSQL.getResource()
 mapperSQL.build()
 // console.log(mapperSQL.mapperSQLToSting())
-mapperSQL.getRetSQL("selectUsers",1)
+mapperSQL.getRetSQL("selectUsers",{"Users_IsBan": 1})
 console.log("**********")
 
-var project = 'user_Name == null && user_ID != 12 || users_Name != root'
-var project2 = 'users_password != null && users_id >= 3 '
-var project3 = 'users_IsBan == 1 || users_Name != null && 2 > 4 || 3 > 5 && 6 < 7'
-var heap = {
-    'user_Name': 'lemon',
-    'user_ID': '12',
-    'users_Name': 'lemon',
-    'root': 'root2'
+if(a == 2){
+    var project = 'user_Name == null && user_ID != 12 || users_Name != root'
+    var project2 = 'users_password != null && users_id >= 3 '
+    var project3 = 'users_IsBan == 1 || users_Name != null && 2 > 4 || 3 > 5 && 6 < 7'
+    var heap = {
+        'user_Name': 'lemon',
+        'user_ID': '12',
+        'users_Name': 'lemon',
+        'root': 'root2'
+    }
+    
+    var heap2 = {
+        'users_password': '123',
+        'users_id': 4
+    }
+    
+    var heap3 = {
+        "users_IsBan": 1,
+        "users_Name": null
+    }
+    
+    var lexer = new Lexer()
+    lexer.setProject(project)
+    lexer.scannerProject()
+    
+    console.log('----------------------------------------------------------------------')
+    var syntacticAnalyzer = new SyntacticAnalyzer()
+    syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
+    syntacticAnalyzer.scanner(heap)
+    console.log('lemon'== null && 12 != 12 || 'lemon' != 'root2')
+    
+    console.log('----------------------------------------------------------------------')
+    lexer.setProject(project2)
+    lexer.scannerProject()
+    syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
+    syntacticAnalyzer.scanner(heap2)
+    console.log('123' != null && 4 >= 3 )
+    
+    console.log('----------------------------------------------------------------------')
+    lexer.setProject(project3)
+    lexer.scannerProject()
+    syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
+    console.log(lexer.getTokenArray())
+    syntacticAnalyzer.scanner(heap3)
+    console.log(1 == 1 || null != null && 2 > 4 || 3 > 5 && 6 < 7) // true || false && false
+    console.log(syntacticAnalyzer.variableStack)
 }
-
-var heap2 = {
-    'users_password': '123',
-    'users_id': 4
-}
-
-var heap3 = {
-    "users_IsBan": 1,
-    "users_Name": null
-}
-
-var lexer = new Lexer()
-lexer.setProject(project)
-lexer.scannerProject()
-
-console.log('----------------------------------------------------------------------')
-var syntacticAnalyzer = new SyntacticAnalyzer()
-syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
-syntacticAnalyzer.scanner(heap)
-console.log('lemon'== null && 12 != 12 || 'lemon' != 'root2')
-
-console.log('----------------------------------------------------------------------')
-lexer.setProject(project2)
-lexer.scannerProject()
-syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
-syntacticAnalyzer.scanner(heap2)
-console.log('123' != null && 4 >= 3 )
-
-console.log('----------------------------------------------------------------------')
-lexer.setProject(project3)
-lexer.scannerProject()
-syntacticAnalyzer.setTokenArray(lexer.getTokenArray())
-console.log(lexer.getTokenArray())
-syntacticAnalyzer.scanner(heap3)
-console.log(1 == 1 || null != null && 2 > 4 || 3 > 5 && 6 < 7) // true || false && false
-console.log(syntacticAnalyzer.variableStack)
