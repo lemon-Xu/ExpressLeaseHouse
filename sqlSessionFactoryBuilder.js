@@ -1,8 +1,7 @@
-var path = require("path");
-var fs = require("fs");
-var mysql2 = require("mysql2")
-
-const parsed = false;
+const path = require("path");
+const fs = require("fs");
+const mysql2 = require("mysql2")
+const winston = require('winston')
 
 
 class SqlSessionFactoryBuilder{
@@ -59,6 +58,51 @@ class SqlSessionFactoryBuilder{
 
 }
 
+class Logger{
+    constructor(id){
+        this.logger = winston.createLogger({
+            level: 'info',
+            format: winston.format.json(),
+            defaultMeta: {},
+            transports: [
+                new winston.transports.File({
+                    name: 'sql',
+                    filename: __dirname + '/log/sql-' + id + '.log',
+                    json: true,
+                    level: 'debug',
+                    maxsize: 1024 * 1024 * 10 // 10MB
+                })
+            ]
+        })
+    }
+
+    debug(mess){
+        var m = {
+            "sqlParser": mess,
+            "date": this.date()
+        }
+        this.logger.debug(m)
+    }
+
+    date(){
+        var date =new Date();
+        var day= date.getDate();
+        var month= date.getMonth();
+        var year= date.getFullYear();
+        var hours= date.getHours();
+
+        var minutes= date.getMinutes();
+        var seconds= date.getSeconds();
+        var date = {
+            "day": day,
+            "month": month,
+            "year": year,
+            "time": hours + '-' + minutes + '-' + seconds
+        }
+        return date
+    }
+}
+
 class MapperSQLParser{
     constructor(){
         this.url = path.resolve(__dirname, 'mapperSQL.json')
@@ -88,40 +132,29 @@ class MapperSQLParser{
 
     build(){
         for(var id in this.config){
-            let b = new sqlNodeParser(this.config[id]) 
+            let b = new sqlNodeParser(this.config[id], id) 
             this.mapperSQL.set(id, b)
             b.build()
         }
-        console.log(this.mapperSQL)
     }
 
     getRetSQL(id,parameter){
-        this.mapperSQL.get(id).getRetSQL(parameter)
+        return this.mapperSQL.get(id).getRetSQL(parameter)
     }
 }
 
 class sqlNodeParser{
-    constructor(sqlNode){
+    constructor(sqlNode, id){
         this.sql = sqlNode['sql']
-        this.if = null
-        this.when = null
-        this.otherwise = null
         this.where = null
         this.set = null
-        this.foreach = null
-
-        if(sqlNode['if'] != null)
-            this.if = new ifNodeParser(sqlNode['if'])
-        if(sqlNode['when'] != null)
-            this.when = new whenNodeParser(sqlNode['when'])
-        if(sqlNode['otherwise'] != null)
-            this.otherwise = new otherwiseNodeParser(sqlNode['otherwise'])
+        this.retSQL = ''
+        this.id = id
+        this.logger = new Logger(id)
         if(sqlNode['where'] != null)
             this.where = new whereNodeParser(sqlNode['where'])
         if(sqlNode['set'] != null)
             this.set = new setNodeParser(sqlNode['set'])
-        if(sqlNode['foreach'] != null)
-            this.foreach = new foreachNodeParser(sqlNode['foreach'])
 
         this.retSQL = "";
     }
@@ -143,19 +176,25 @@ class sqlNodeParser{
 
     getRetSQL(parameter){
         if(this.if != null)
-            this.if.getRetSQL(parameter)
+            this.retSQL += this.if.getRetSQL(parameter)
         if(this.when != null)
-            this.when.getRetSQL(parameter)
+            this.retSQL += this.when.getRetSQL(parameter)
         if(this.otherwise != null)
-            this.otherwise.getRetSQL(parameter)
+            this.retSQL += this.otherwise.getRetSQL(parameter)
         if(this.where != null)
-            this.where.getRetSQL(parameter)
+            this.retSQL += this.where.getRetSQL(parameter)
         if(this.set != null)
-            this.set.getRetSQL(parameter)
+            this.retSQL += this.set.getRetSQL(parameter)
         if(this.foreach != null)
-            this.foreach.getRetSQL(parameter)
+            this.retSQL += this.foreach.getRetSQL(parameter)
 
-        
+        let ret = this.sql + this.retSQL
+        this.logger.debug({
+            "id": this.id,
+            "parameter": parameter,
+            "ret": ret
+        })
+        return ret
     }
 
 }
@@ -165,13 +204,13 @@ class nodeParser{
         this.logic = new Array();
         this.sql = new Array();
         this.parserSQL = null;
+        if(this.node == undefined){
+            return null
+        }
         for(var a in node){
             this.logic.push(node[a]['logic'])
             this.sql.push(node[a]['sql'])
         }
-        console.log(this.logic)
-        console.log(this.sql)
-        console.log(node.length)
         this.tokenSQL = new Array()
     }
 
@@ -184,26 +223,16 @@ class nodeParser{
             lexer.scannerProject()
             this.tokenSQL.push(lexer.getTokenArray())
         }
-        console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-        console.log(this.tokenSQL)
-        console.log(this.logic)
     }
 
     getRetSQL(parameter){
-        var ret = new Array()
+        var sqlArray = new Array()
         for(var a in this.logic){
-            console.log(this.logic[a])
-            console.log(this.tokenSQL[a])
-            console.log('if')
-            if(this.getBoolean(this.tokenSQL[a], parameter))
-                ret.push(this.getRealSQL(this.sql[a], parameter))
+            var isTrue = this.getBoolean(this.tokenSQL[a], parameter)
+            if(isTrue)
+                sqlArray.push(this.getRealSQL(this.sql[a], parameter))
         }
-        var c = this.sql + ' '
-        for(var b in ret){
-            c += ' ' + ret[b]
-        }
-        console.log('c:                  '+c)
-        return c
+        return this.altRealSQL(sqlArray)
     }
 
     getBoolean(tokenArray, heap){
@@ -216,9 +245,8 @@ class nodeParser{
 
     getRealSQL(sql, parameter){
         var a = /#{[a-zA-Z_][a-zA-Z_0-9]*}/g
-        var retSQL = sql
+        var retSQL
         var parameterArray = sql.match(a)
-        console.log(parameterArray+'\n************************************')
         for(var a in parameterArray){
             var str = ''
             for(var b in parameterArray[a]){
@@ -226,13 +254,19 @@ class nodeParser{
                     continue
                 str += parameterArray[a][b]
             }
-            retSQL += sql.replace(parameterArray[a], parameter[str])
+            retSQL = sql.replace(parameterArray[a], parameter[str])
 
-            console.log(parameterArray[a], parameter[str])
         }
-        console.log(retSQL)
         return retSQL
 
+    }
+
+    altRealSQL(sqlArray){
+        var c = ''
+        for(var b in sqlArray){
+            c += ' ' + sqlArray[b]
+        }
+        return c
     }
 }
 
@@ -257,6 +291,19 @@ class otherwiseNodeParser extends nodeParser{
 class whereNodeParser extends nodeParser{
     constructor(node){
         super(node)
+    }
+
+    altRealSQL(sqlArray){
+        var c = ''
+        if(sqlArray.length == 0)
+            return ' '
+        else
+            c += 'WHERE '
+        c += sqlArray[0].replace(/(AND |OR )/i, '')
+        for(var b = 1; b < sqlArray.length; ++b){
+            c += ' ' + sqlArray[b]
+        }
+        return c
     }
 }
 
@@ -449,16 +496,35 @@ class stringObject{
     }
 }
 
+const analyzerLogger = {
+    "logger":  winston.createLogger({
+        level: 'info',
+        format: winston.format.json(),
+        defaultMeta: {},
+        transports: [
+            new winston.transports.File({
+                name: 'analyzer',
+                filename: __dirname + '/log/analyzer.log',
+                json: true,
+                level: 'debug',
+                maxsize: 1024 * 1024 * 10 // 10MB
+            })
+        ]
+    }),
+    "isToLog": true,
+    "debug": function (mess){
+        if(!this.isToLog)
+            return
+        this.logger.debug(mess)
+    }
+}
+analyzerLogger.debug({"mess":"123"})
+analyzerLogger.logger
+
 class SyntacticAnalyzer{
     constructor(tokenArray){
         this.COUNT = 99
         this.ID = 100
-        // this.ip = -1 // 扫描指针
-        // this.tokenArray = tokenArray // token序列
-        // this.tokenArray.push(new Token('ε', 111))// ε =  Alt + 42693
-        // this.tokenArray.push('$')
-        // this.stack = new Array(new stringObject('$'),'E')
-        // this.outPut = new Array()
         this.predictiveAnTb = new Map() // 预测表
         this.terminalSymbol = new Array('E', 'B', 'F', 'C', 'O') // 非终结符
 
@@ -514,7 +580,7 @@ class SyntacticAnalyzer{
             else if(stack[stack.length - 2] == '<='){
                 v = stack[stack.length - 3] <= stack[stack.length - 1]
             }
-            console.log('xxxxxxxxxxxxxx                      ' + v)
+            // console.log('xxxxxxxxxxxxxx                      ' + v)
             for(var i = 1; i <= 3; i++)
                 stack.pop()
             stack.push(v)
@@ -554,7 +620,7 @@ class SyntacticAnalyzer{
             else if(o == '||'){
                 v = stack[L] || stack[R]
             }
-            console.log('xxxxxxxxxxxx                                                ' + v +'   '+oIndex)
+            // console.log('xxxxxxxxxxxx                                                ' + v +'   '+oIndex)
             if(oIndex != 0){
                 stack.splice(L,1)
                 stack.splice(L,1)
@@ -605,9 +671,9 @@ class SyntacticAnalyzer{
 
   
     toAltToken(ch){
-        console.log('ch:  '+ch)
-        console.log(this.ip)
-        console.log(this.tokenArray[this.ip])
+        // console.log('ch:  '+ch)
+        // console.log(this.ip)
+        // console.log(this.tokenArray[this.ip])
         if(ch.getNum() == this.COUNT)
             return ch = new Token('COUNT', this.COUNT)
         else if(ch.getNum() == this.ID)
@@ -621,8 +687,8 @@ class SyntacticAnalyzer{
         var saveCh = null
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            console.log(this.stack)
-            console.log(this.variableStack)
+            // console.log(this.stack)
+            // console.log(this.variableStack)
             if(this.semanticSymbol.indexOf(x.toString()) != -1){ // x在语义行为符号表中
               
                
@@ -672,20 +738,16 @@ class SyntacticAnalyzer{
                     if(selectPAValue[b] != ',')
                         log += selectPAValue[b]
                 }
-                console.log(log)
+                // console.log(log)
 
-                // // 语义动作进栈
-                // for(var c in selectSSValue){
-                //     this.stack.push(selectSSValue[c])
-                // }
                 
             }
             x = this.stack[this.stack.length - 1]
         }
-        console.log('成功')
+        // console.log('成功')
         //console.log(this.stack)
         //console.log(this.variableStack)
-        return this.variableStack
+        return this.variableStack[0]
     }
 
     tbToString(){
@@ -693,7 +755,7 @@ class SyntacticAnalyzer{
     }
     
     equalToken(string, token){
-        console.log(string, token.getString())
+        // console.log(string, token.getString())
         if(string == token.getString())
             return true
         else if(string == 'COUNT' && token.getNum() == this.COUNT)
@@ -705,20 +767,38 @@ class SyntacticAnalyzer{
     }
 }
 
+function query(sql, fun){
+    session.query(sql, function(err, rows, fields){
+        fun(err,rows,fields)
+    })
+}
+
 var a = 1
+if(a == 1){
+    
+    var sqlSession = new SqlSessionFactoryBuilder()
+    sqlSession.getResource();
+    var session = sqlSession.build();
+    // console.log(sqlSession.configToSting())
+    console.log("**********")
+    
+    var mapperSQL = new MapperSQLParser()
+    mapperSQL.getResource()
+    mapperSQL.build()
+    // console.log(mapperSQL.mapperSQLToSting())
+    var b = mapperSQL.getRetSQL("selectUsers",{"Users_IsBan": 0})
+    // var b = mapperSQL.getRetSQL("selectUsers",{})
+    console.log("**********  "+ b)
+    
+    query(b, function(err, rows, fields){
+        console.log('err:')
+        console.log(err)
+        console.log('rows')
+        console.log(rows)
+    })
 
-var sqlSession = new SqlSessionFactoryBuilder()
-sqlSession.getResource();
-sqlSession.build();
-// console.log(sqlSession.configToSting())
-console.log("**********")
+}
 
-var mapperSQL = new MapperSQLParser()
-mapperSQL.getResource()
-mapperSQL.build()
-// console.log(mapperSQL.mapperSQLToSting())
-mapperSQL.getRetSQL("selectUsers",{"Users_IsBan": 1})
-console.log("**********")
 
 if(a == 2){
     var project = 'user_Name == null && user_ID != 12 || users_Name != root'
