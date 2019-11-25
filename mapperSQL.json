@@ -21,7 +21,39 @@
             },
             {
                 "logic": "Users_Name != null",
-                "sql": "AND Users_Name = Users_Name"
+                "sql": "AND Users_Name = #{Users_Name}"
+            }
+        ]
+    },
+    "insertUsers":{
+        "type": "insert into",
+        "sql": " INSERT INTO Users",
+        "set": [
+            {
+                "logic": "Users_IsBan != null",
+                "sql": "#{Users_IsBan}"
+            },
+            {
+                "logic": "Users_Rank != null",
+                "sql": "#{Users_Rank}"
+            },
+            {
+                "logic": "Users_PassWord != null",
+                "sql": "MD5(#{Users_PassWord})"
+            },
+            {
+                "logic": "Users_Account != null",
+                "sql": "#{Users_Account}"
+            },
+            {
+                "logic": "Users_Name != null",
+                "sql": "#{Users_Name}"
+            }
+        ],
+        "where": [
+            {
+                "logic": "Users_IsBan != null",
+                "sql": "AND Users_IsBan = #{Users_IsBan}"
             }
         ]
     }
