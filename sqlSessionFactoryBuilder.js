@@ -157,6 +157,7 @@ class sqlNodeParser{
             this.set = new setNodeParser(sqlNode['set'])
 
         this.retSQL = "";
+        // console.log(sqlNode['where'])
     }
 
     build(){
@@ -204,13 +205,15 @@ class nodeParser{
         this.logic = new Array();
         this.sql = new Array();
         this.parserSQL = null;
-        if(this.node == undefined){
+        // console.log(node)
+        if(node == undefined){
             return null
         }
         for(var a in node){
             this.logic.push(node[a]['logic'])
             this.sql.push(node[a]['sql'])
         }
+        // console.log('node:   '+node)
         this.tokenSQL = new Array()
     }
 
@@ -227,11 +230,13 @@ class nodeParser{
 
     getRetSQL(parameter){
         var sqlArray = new Array()
+        // console.log(this.logic)
         for(var a in this.logic){
             var isTrue = this.getBoolean(this.tokenSQL[a], parameter)
             if(isTrue)
                 sqlArray.push(this.getRealSQL(this.sql[a], parameter))
         }
+        // console.log(this.logic)
         return this.altRealSQL(sqlArray)
     }
 
@@ -239,7 +244,7 @@ class nodeParser{
         var syntacticAnalyzer = new SyntacticAnalyzer()
         syntacticAnalyzer.setTokenArray(tokenArray)
         var ret = syntacticAnalyzer.scanner(heap)
-        
+        // console.log(ret)
         return ret
     }
 
@@ -254,10 +259,15 @@ class nodeParser{
                     continue
                 str += parameterArray[a][b]
             }
-            retSQL = sql.replace(parameterArray[a], parameter[str])
+            let para = parameter[str]
+            // console.log(typeof(para))
+            if(typeof(para) != 'number'){
+                para = '\'' + para + '\''
+            }
+            retSQL = sql.replace(parameterArray[a], para)
 
         }
-        return retSQL
+        return retSQL == undefined ? '' : retSQL
 
     }
 
@@ -295,6 +305,7 @@ class whereNodeParser extends nodeParser{
 
     altRealSQL(sqlArray){
         var c = ''
+        // console.log(sqlArray)
         if(sqlArray.length == 0)
             return ' '
         else
@@ -518,8 +529,11 @@ const analyzerLogger = {
         this.logger.debug(mess)
     }
 }
-analyzerLogger.debug({"mess":"123"})
-analyzerLogger.logger
+var analyzerJSON = {
+    "stack": null,
+    "variableStack": null,
+    "log": null
+}
 
 class SyntacticAnalyzer{
     constructor(tokenArray){
@@ -687,8 +701,8 @@ class SyntacticAnalyzer{
         var saveCh = null
         while(x != '$'){ // 栈非空
             ch = this.tokenArray[this.ip]
-            // console.log(this.stack)
-            // console.log(this.variableStack)
+            analyzerJSON.staack = this.stack
+            analyzerJSON.variableStack = this.variableStack
             if(this.semanticSymbol.indexOf(x.toString()) != -1){ // x在语义行为符号表中
               
                
@@ -738,10 +752,9 @@ class SyntacticAnalyzer{
                     if(selectPAValue[b] != ',')
                         log += selectPAValue[b]
                 }
-                // console.log(log)
-
-                
+                analyzerJSON.log = log
             }
+            analyzerLogger.debug({"mess": analyzerJSON})
             x = this.stack[this.stack.length - 1]
         }
         // console.log('成功')
@@ -780,15 +793,19 @@ if(a == 1){
     sqlSession.getResource();
     var session = sqlSession.build();
     // console.log(sqlSession.configToSting())
-    console.log("**********")
     
     var mapperSQL = new MapperSQLParser()
     mapperSQL.getResource()
     mapperSQL.build()
     // console.log(mapperSQL.mapperSQLToSting())
-    var b = mapperSQL.getRetSQL("selectUsers",{"Users_IsBan": 0})
+    var b = mapperSQL.getRetSQL("selectUsers",{
+        "Users_IsBan": 0,
+        "Users_Name": "游客1",
+        "Users_Account": "root",
+        "Users_PassWord": 1234
+    })
     // var b = mapperSQL.getRetSQL("selectUsers",{})
-    console.log("**********  "+ b)
+    console.log(b)
     
     query(b, function(err, rows, fields){
         console.log('err:')

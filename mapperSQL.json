@@ -1,17 +1,28 @@
 {
-   "selectUsers":{
-       "type":"select",
-       "sql":" SELECT * FROM Users WHERE Users_Rank = '管理员' ",
-       "if":[
-           {
-               "logic": "Users_IsBan != null AND( Users_IsBan == 1 or Users_IsBan == 2)",
-               "sql": "AND Users_IsBan = #{Users_IsBan}"
-           }
-       ],
-       "when":[],
-       "otherwise":[],
-       "where": [],
-       "set": [],
-       "foreach": []  
-   }
+    "selectUsers": {
+        "type": "select",
+        "sql": " SELECT * FROM users ",
+        "where": [
+            {
+                "logic": "Users_IsBan != null",
+                "sql": "AND Users_IsBan = #{Users_IsBan}"
+            },
+            {
+                "logic": "Users_Rank != null",
+                "sql": "AND Users_Rank = #{Users_Rank}"
+            },
+            {
+                "logic": "Users_Account != null",
+                "sql": "AND Users_Account = #{Users_Account}"
+            },
+            {
+                "logic": "Users_PassWord != null",
+                "sql": "AND Users_PassWord = MD5(#{Users_PassWord})"
+            },
+            {
+                "logic": "Users_Name != null",
+                "sql": "AND Users_Name = Users_Name"
+            }
+        ]
+    }
 }
